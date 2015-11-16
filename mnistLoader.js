@@ -10,7 +10,7 @@ var fs = require('fs');
 // { 'label': [pixel, pixel, pixel] }
 // ]
 // Each pixel having a # from 0-255
-var readData = module.exports = function() {
+module.exports = function() {
   var pixelValues = [];
   var dataFileBuffer = fs.readFileSync(__dirname + '/data/train-images.idx3-ubyte');
   var labelFileBuffer = fs.readFileSync(__dirname + '/data/train-labels.idx1-ubyte');
