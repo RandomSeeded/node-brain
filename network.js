@@ -44,65 +44,111 @@ var Network = module.exports.Network = function(sizes) {
       var weights = zippedMatrix[layer][1];
 
       // The new activation matrix is the dot product of weights * a + the biases, as BROADCASTED (eg 1x3 + 3x1 -> 3x3)
+      // console.log('w',weights);
+      // console.log('a', a);
       var dotProduct = numeric.dot(weights, a);
 
-      // Weights * a -> always a 1x[something] matrix. 
-      var dims = dotProduct.length;
-
-      // dotProduct can be either an array or an array within an array. This standardizes to an array
-      if (Array.isArray(dotProduct[0])) {
-        dotProduct = dotProduct[0];
+      // console.log('dp',dotProduct);
+      // Implement broadcasting for dot product and biases for broadcast addition of different sized matrices
+      // If the dot product is a 1xX matrix, stretch it
+      // Otherwise, LEAVE IT
+      var broadcastDotProduct = [];
+      //if (dotProduct.length !== 1) {
+      if (!Array.isArray(dotProduct[0])) {
+        var dims = dotProduct.length
+        for (var i = 0; i < dims; i++) { 
+          broadcastDotProduct.push(dotProduct.slice(0)); 
+        }
+      } else {
+        broadcastDotProduct = dotProduct;
       }
 
-      // Implement broadcasting for dot product and biases for broadcast addition of different sized matrices
-      var broadcastDotProduct = [];
-      for (var i = 0; i < dims; i++) { 
-        broadcastDotProduct.push(dotProduct.slice(0)); 
+      // Get width to stretch biases to
+      var numCols;
+      if (Array.isArray(dotProduct[0])) {
+        numCols = dotProduct[0].length;
+      } else {
+        numCols = dotProduct.length;
       }
       var broadcastBiases = [];
-      for (var i = 0; i < dims; i++) {
+      for (var i = 0; i < biases.length; i++) {
         var val = biases[i][0];
         var row = [];
-        for (var j = 0; j < dims; j++) {
+
+        for (var j = 0; j < numCols; j++) {
           row.push(val);
         }
         broadcastBiases.push(row);
       }
-
+      // console.log('b',biases);
+      // console.log('broadcast dp', broadcastDotProduct);
+      // console.log('broadcast b', broadcastBiases);
       a = sigmoid(numeric.add(broadcastDotProduct, broadcastBiases));
+      // console.log('enda', a);
     }
     return a;
   }
 
-  this.SGD = function(training_data, epochs, mini_batch_size, eta, test_data) {
+  this.SGD = function(training_data, epochs, miniBatchSize, eta, testData) {
     // Train the neural network using mini-batch stochastic
     // gradient descent.  The training_data is a list of tuples
     // (x, y) representing the training inputs and the desired
     // outputs.  The other non-optional parameters are
-    // self-explanatory.  If test_data is provided then the
+    // self-explanatory.  If testData is provided then the
     // network will be evaluated against the test data after each
     // epoch, and partial progress printed out.  This is useful for
     // tracking progress, but slows things down substantially.
 
     // Initializations
-    if (test_data) { n_test = test_data.length; }
-    test_data = test_data || null;
+    testData = testData || null;
+    if (testData) { n_test = testData.length; }
     n = training_data.length;
 
-    for (var i = 0; i < epochs; i++) {
+    for (var epoch = 0; epoch < epochs; epoch++) {
       shuffle(training_data);
-      var mini_batches = [];
-      for (var j = 0; j < n; j += mini_batch_size) {
-        mini_batches.push(training_data.splice(j, j+ mini_batch_size));
+      var miniBatches = [];
+      for (var j = 0; j < n; j += miniBatchSize) {
+        miniBatches.push(training_data.splice(j, j+ miniBatchSize));
       }
 
-      for (var k = 0; k < mini_batches.length; k++) {
+      for (var k = 0; k < miniBatches.length; k++) {
         //update mini batch
+        this.updateMiniBatch(miniBatches[k], eta);
+      }
+
+      if (testData) {
+        console.log("Epoch " + epoch + ": " + this.evaluate(testData) + " / " + n_test);
+      } else {
+        console.log("Epoch " + epoch + " complete");
       }
     }
   }
+
+  this.updateMiniBatch = function(miniBatch, eta) {
+    //console.log('updating mini batch', miniBatch);
+  }
+
+  this.evaluate = function(testData) {
+    var numCorrect = 0;
+    for (var i = 0; i < testData.length; i++) {
+      var resultArr = this.feedForward(testData[i].pixels);
+      var maxResult = 0;
+      var result = 0;
+      // Turn array of output nodes into one best guess
+      for (var nodeIdx = 0; nodeIdx < resultArr.length; nodeIdx++) {
+        if (resultArr[nodeIdx] > maxResult) {
+          maxResult = resultArr[nodeIdx];
+          result = nodeIdx;
+        }
+      }
+      if (result === testData[i].label) {
+        numCorrect++;
+      }
+    }
+    return numCorrect;
+  }
 }
 
-var myNetwork = new Network([2,3,1]);
-console.log(myNetwork.feedForward([2,2]));
+// net = new Network([2,3,2]);
+// console.log('output',net.feedForward([1,1]));
 
