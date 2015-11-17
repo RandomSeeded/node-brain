@@ -4,6 +4,7 @@ var _ = require('underscore');
 var helpers = require('./helpers');
 var operationScalarMatrix = helpers.operationScalarMatrix;
 var sigmoid = helpers.sigmoid;
+var shuffle = helpers.shuffle;
 
 // Sizes is a array representing the number of nodes in each layer of the network
 var Network = module.exports.Network = function(sizes) {
@@ -71,6 +72,34 @@ var Network = module.exports.Network = function(sizes) {
       a = sigmoid(numeric.add(broadcastDotProduct, broadcastBiases));
     }
     return a;
+  }
+
+  this.SGD = function(training_data, epochs, mini_batch_size, eta, test_data) {
+    // Train the neural network using mini-batch stochastic
+    // gradient descent.  The training_data is a list of tuples
+    // (x, y) representing the training inputs and the desired
+    // outputs.  The other non-optional parameters are
+    // self-explanatory.  If test_data is provided then the
+    // network will be evaluated against the test data after each
+    // epoch, and partial progress printed out.  This is useful for
+    // tracking progress, but slows things down substantially.
+
+    // Initializations
+    if (test_data) { n_test = test_data.length; }
+    test_data = test_data || null;
+    n = training_data.length;
+
+    for (var i = 0; i < epochs; i++) {
+      shuffle(training_data);
+      var mini_batches = [];
+      for (var j = 0; j < n; j += mini_batch_size) {
+        mini_batches.push(training_data.splice(j, j+ mini_batch_size));
+      }
+
+      for (var k = 0; k < mini_batches.length; k++) {
+        //update mini batch
+      }
+    }
   }
 }
 
