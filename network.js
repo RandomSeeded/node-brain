@@ -88,13 +88,42 @@ var Network = module.exports.Network = function(sizes) {
     // Training data: 784x1 inputs, 10x1 output
     var nabla_b = helpers.zeros(this.biases);
     var nabla_w = helpers.zeros(this.weights);
+
     for (var i = 0; i < miniBatch.length; i++) {
       var datum = miniBatch[i];
+
+      // Backpropogate to get delta nablas
       // NOTE: you should tuple this so that it's not dependent on this specific input
       var backprop = this.backprop(datum.pixels, datum.label);
       var delta_nabla_b = backprop.nabla_b;
       var delta_nabla_w = backprop.nabla_w;
-      // Continue here
+
+      // Update nablas for each layer with the deltas calculated in the backpropogation
+      for (var j = 0; j < nabla_b.length; j++) {
+        console.log('nabla_b', nabla_b);
+        console.log('delta_nabla_b', delta_nabla_b);
+
+        // DEBUGGING TODO: currently reaching 0, not 1
+        console.log('reached0');
+        nabla_b = numeric.add(nabla_b, delta_nabla_b);
+        console.log('reached1');
+        nabla_w = numeric.add(nabla_w, delta_nabla_w);
+        console.log('reached2');
+      }
+    }
+
+    // Finally, update the weights and biases
+    for (var i = 0; i < this.weights.length; i++) {
+      var w = this.weights[i];
+      var b = this.biases[i];
+      var nw = nabla_w[i];
+      var nb = nabla_b[i];
+      // new weight matrix: w-(eta/len(mini_batch))*nw
+      // eta/len(mini_batch) -> CONSTANT
+      // (eta/len(mini_batch)*nw -> matrix [nw is a matrix]
+      // w - [^] -> matrix subtraction
+      this.weights[i] = numeric['-'](w, operationScalarMatrix('multiply',(eta/miniBatch.length),nw));
+      this.biases[i] = numeric['-'](b, operationScalarMatrix('multiply',(eta/miniBatch.length),nb));
     }
   }
 
@@ -119,10 +148,7 @@ var Network = module.exports.Network = function(sizes) {
       activations.push(activation)
     }
 
-    //console.log('activations', activations);
-
     // Backward pass
-    // NOTE: y is supposed to be 10x1, not 1x10
     var costDeriv = this.costDerivative(activations[activations.length-1], y);
     var sigPrime = helpers.sigmoidPrime(zs[zs.length-1]);
     var delta = helpers.hadamardProduct(costDeriv, sigPrime);
@@ -130,6 +156,7 @@ var Network = module.exports.Network = function(sizes) {
     nabla_b[nabla_b.length-1] = delta;
     nabla_w[nabla_w.length-1] = numeric.dot(delta, numeric.transpose(activations[activations.length-2]));
 
+    // Work backwards through the layers
     for (var l = 2; l < this.numLayers; l++) {
       z = zs[zs.length - l];
       var sp = helpers.sigmoidPrime(z);
