@@ -4,6 +4,7 @@ Loads the MNIST image data
 
 var _ = require('underscore-contrib');
 var fs = require('fs');
+var numeric = require('numeric');
 
 //var numTotalImages = 60000;
 //var trainingDataSize = 50000;
@@ -48,20 +49,20 @@ var loadDataWrapper = module.exports.loadDataWrapper = function() {
 
   for (var i = 0; i < trainingData.length; i++) {
     // Reshape training data input into 1x784 array
-    trainingData[i].pixels = _.chunk(trainingData[i].pixels, 1);
+    trainingData[i].pixels = numeric.transpose([trainingData[i].pixels]);
 
-    // Reshape training data outputs into a 1x10 array
+    // Reshape training data outputs into a 10x1 array
     var labelArr = [];
     for (var digit = 0; digit < 10; digit++) {
-      labelArr[digit] = 0;
+      labelArr[digit] = [0];
     }
-    labelArr[trainingData[i].label] = 1;
+    labelArr[trainingData[i].label] = [1];
     trainingData[i].label = labelArr;
   }
 
   // Reshape test data input into 1x784 array
   for (var i = 0; i < testData.length; i++) {
-    testData[i].pixels = _.chunk(testData[i].pixels, 1);
+    testData[i].pixels = numeric.transpose([testData[i].pixels]);
   }
 
   return {
