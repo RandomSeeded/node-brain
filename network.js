@@ -65,13 +65,15 @@ var Network = module.exports.Network = function(sizes) {
       helpers.shuffle(trainingData);
       var miniBatches = [];
       for (var j = 0; j < n; j += miniBatchSize) {
-        miniBatches.push(trainingData.splice(j, j+ miniBatchSize));
+        miniBatches.push(trainingData.slice(j, j+miniBatchSize));
       }
 
+      //console.log('epoch weights last', this.weights[this.weights.length-1]);
       for (var k = 0; k < miniBatches.length; k++) {
         //update mini batch
         this.updateMiniBatch(miniBatches[k], eta);
       }
+      //console.log('epoch post-weights', this.weights[this.weights.length-1]);
 
       if (testData) {
         console.log("Epoch " + epoch + ": " + this.evaluate(testData) + " / " + n_test);
@@ -100,15 +102,8 @@ var Network = module.exports.Network = function(sizes) {
 
       // Update nablas for each layer with the deltas calculated in the backpropogation
       for (var j = 0; j < nabla_b.length; j++) {
-        console.log('nabla_b', nabla_b);
-        console.log('delta_nabla_b', delta_nabla_b);
-
-        // DEBUGGING TODO: currently reaching 0, not 1
-        console.log('reached0');
-        nabla_b = numeric.add(nabla_b, delta_nabla_b);
-        console.log('reached1');
-        nabla_w = numeric.add(nabla_w, delta_nabla_w);
-        console.log('reached2');
+        nabla_b[j] = numeric.add(nabla_b[j], delta_nabla_b[j]);
+        nabla_w[j] = numeric.add(nabla_w[j], delta_nabla_w[j]);
       }
     }
 
@@ -118,13 +113,22 @@ var Network = module.exports.Network = function(sizes) {
       var b = this.biases[i];
       var nw = nabla_w[i];
       var nb = nabla_b[i];
+
       // new weight matrix: w-(eta/len(mini_batch))*nw
       // eta/len(mini_batch) -> CONSTANT
       // (eta/len(mini_batch)*nw -> matrix [nw is a matrix]
       // w - [^] -> matrix subtraction
       this.weights[i] = numeric['-'](w, operationScalarMatrix('multiply',(eta/miniBatch.length),nw));
       this.biases[i] = numeric['-'](b, operationScalarMatrix('multiply',(eta/miniBatch.length),nb));
+      if (isNaN(this.weights[i][0][0])) {
+        //console.log('w',w);
+        //console.log('nw', nw);
+        //console.log('eta minibatch len', eta/miniBatch.length);
+        console.log('minibatch len', miniBatch.length);
+        throw "die";
+      }
     }
+    //console.log('final weights',this.weights[this.weights.length-1]);
   }
 
   this.backprop = function(x, y) {
