@@ -10,6 +10,8 @@ var Network = module.exports.Network = function(sizes) {
   this.sizes = sizes;
 
   // Randomly generate a starting bias for each non-input node
+  // this.biases = [[[.1],[.2]],[[.3],[.4]]];
+  // this.weights = [[[.1,.2],[.3,.4]],[[.5,.6],[.7,.8]]];
   this.biases = [];
   for (var layer = 1; layer < sizes.length; layer++) {
     var layerSize = sizes[layer];
@@ -41,12 +43,18 @@ var Network = module.exports.Network = function(sizes) {
       var b = zippedMatrix[layer][0];
       var w = zippedMatrix[layer][1];
       var z = helpers.calcZ(w, a, b);
+      // console.log('input a',a);
+      // console.log('b',b);
+      // console.log('w',w);
+      // console.log('z',z);
       a = helpers.sigmoid(z);
+      // console.log('final a',a);
     }
     return a;
   }
 
   this.SGD = function(trainingData, epochs, miniBatchSize, eta, testData) {
+    //console.log('reached0');
     // Train the neural network using mini-batch stochastic
     // gradient descent.  The trainingData is a list of tuples
     // (x, y) representing the training inputs and the desired
@@ -61,6 +69,7 @@ var Network = module.exports.Network = function(sizes) {
     if (testData) { n_test = testData.length; }
     n = trainingData.length;
 
+    //console.log('reached1');
     for (var epoch = 0; epoch < epochs; epoch++) {
       helpers.shuffle(trainingData);
       var miniBatches = [];
@@ -69,10 +78,13 @@ var Network = module.exports.Network = function(sizes) {
       }
 
       //console.log('epoch weights last', this.weights[this.weights.length-1]);
+      //console.log('reached2');
       for (var k = 0; k < miniBatches.length; k++) {
         //update mini batch
+        //console.log('mini batch', miniBatches[k]);
         this.updateMiniBatch(miniBatches[k], eta);
       }
+      //console.log('reached3');
       //console.log('epoch post-weights', this.weights[this.weights.length-1]);
 
       if (testData) {
@@ -91,20 +103,24 @@ var Network = module.exports.Network = function(sizes) {
     var nabla_b = helpers.zeros(this.biases);
     var nabla_w = helpers.zeros(this.weights);
 
+    //console.log('inner 0');
     for (var i = 0; i < miniBatch.length; i++) {
       var datum = miniBatch[i];
 
       // Backpropogate to get delta nablas
       // NOTE: you should tuple this so that it's not dependent on this specific input
+      //console.log('datum', datum);
       var backprop = this.backprop(datum.pixels, datum.label);
       var delta_nabla_b = backprop.nabla_b;
       var delta_nabla_w = backprop.nabla_w;
 
       // Update nablas for each layer with the deltas calculated in the backpropogation
+      //console.log('inner 1');
       for (var j = 0; j < nabla_b.length; j++) {
         nabla_b[j] = numeric.add(nabla_b[j], delta_nabla_b[j]);
         nabla_w[j] = numeric.add(nabla_w[j], delta_nabla_w[j]);
       }
+      //console.log('inner 2');
     }
 
     // Finally, update the weights and biases
@@ -120,19 +136,13 @@ var Network = module.exports.Network = function(sizes) {
       // w - [^] -> matrix subtraction
       this.weights[i] = numeric['-'](w, operationScalarMatrix('multiply',(eta/miniBatch.length),nw));
       this.biases[i] = numeric['-'](b, operationScalarMatrix('multiply',(eta/miniBatch.length),nb));
-      if (isNaN(this.weights[i][0][0])) {
-        //console.log('w',w);
-        //console.log('nw', nw);
-        //console.log('eta minibatch len', eta/miniBatch.length);
-        console.log('minibatch len', miniBatch.length);
-        throw "die";
-      }
     }
     //console.log('final weights',this.weights[this.weights.length-1]);
   }
 
   this.backprop = function(x, y) {
     // List of zero-matrices shaped like biases & weights
+    //console.log('backprop 0');
     var nabla_b = helpers.zeros(this.biases);
     var nabla_w = helpers.zeros(this.weights);
 
@@ -142,7 +152,7 @@ var Network = module.exports.Network = function(sizes) {
     var activations = [x]; 
     // Store all the z vectors, layer by layer (Z = w * a + b)
     var zs = [];
-
+    //console.log('backprop 1');
     for (var i = 0; i < this.biases.length; i++) {
       var b = this.biases[i];
       var w = this.weights[i];
@@ -150,10 +160,13 @@ var Network = module.exports.Network = function(sizes) {
       zs.push(z);
       activation = helpers.sigmoid(z);
       activations.push(activation)
+      //console.log('backprop 2');
     }
 
     // Backward pass
+    //console.log('backprop 3');
     var costDeriv = this.costDerivative(activations[activations.length-1], y);
+    //console.log('backprop 4');
     var sigPrime = helpers.sigmoidPrime(zs[zs.length-1]);
     var delta = helpers.hadamardProduct(costDeriv, sigPrime);
     
@@ -201,7 +214,12 @@ var Network = module.exports.Network = function(sizes) {
   // Remember: cost function is mean-squared-error: aka how far off perfect we are
   // By changing W or B, we change the MSE of cost, and thereby improve our network
   this.costDerivative = function(outputActivations, y) {
-    return numeric['-'](outputActivations, y);
+    // console.log('outputActivations', outputActivations);
+    // console.log('y', y);
+    // //console.log('outputActivations',outputActivations,'y',y);
+    var result = numeric['-'](outputActivations, y);
+    //console.log('cost deriv1');
+    return result;
   }
 }
 

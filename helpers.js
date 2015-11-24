@@ -100,6 +100,8 @@ module.exports.calcZ = function(w, a, b) {
     }
     broadcastBiases.push(row);
   }
+  // console.log('dotProduct', dotProduct);
+  // console.log('b', b);
   return numeric.add(broadcastDotProduct, broadcastBiases);
 }
 
