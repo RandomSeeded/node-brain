@@ -8,8 +8,8 @@ var numeric = require('numeric');
 
 //var numTotalImages = 60000;
 //var trainingDataSize = 50000;
-var numTotalImages = 1000;
-var trainingDataSize = 900;
+var numTotalImages = 10000;
+var trainingDataSize = 9000;
 
 // Returns an array of objects with format:
 // [

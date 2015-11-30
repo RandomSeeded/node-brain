@@ -2,7 +2,17 @@ debugger;
 var data = require('./mnistLoader').loadDataWrapper();
 var network = require('./network');
 
-
+// var testOut = [];
+// var testNum = 4;
+// var counter = 0;
+// for (var i = 0; i < 28; i++) {
+//   var row = [];
+//   for (var j = 0; j < 28; j++) {
+//     row.push(data.trainingData[testNum].pixels[counter++][0]);
+//   }
+//   testOut.push(row);
+// }
+// console.log(data.trainingData[testNum].label, testOut);
 
 training_data = [
   {
